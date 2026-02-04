@@ -134,6 +134,71 @@ def tc_20_signout_option_visible():
     assert "Sign Out" in driver.page_source or "Sign in" in driver.page_source
 
 
+# ---------- NEW LOGIN TEST CASES ----------
+
+def tc_login_001_invalid_credentials():
+    """Test Case TC_LOGIN_001: Verify invalid login error message"""
+    # Step 2: Navigate to the login screen
+    driver.find_element(By.ID, "nav-link-accountList").click()
+    pause()
+    assert "Sign-In" in driver.page_source or "Sign in" in driver.page_source
+    
+    # Step 3: Enter an invalid username and/or password
+    driver.find_element(By.ID, "ap_email").send_keys("invalid@email.com")
+    driver.find_element(By.ID, "continue").click()
+    pause()
+    driver.find_element(By.ID, "ap_password").send_keys("wrongpassword")
+    driver.find_element(By.ID, "signInSubmit").click()
+    pause()
+    
+    # Expected: Error message displayed
+    error_message = driver.find_element(By.CSS_SELECTOR, ".a-alert-content").text
+    assert "Invalid username or password" in error_message or "incorrect" in error_message.lower()
+
+
+def tc_login_002_remember_me_checkbox():
+    """Test Case TC_LOGIN_002: Verify 'Remember Me' checkbox is not present"""
+    # Step 2: Navigate to the login screen
+    driver.get(BASE_URL)
+    driver.find_element(By.ID, "nav-link-accountList").click()
+    pause()
+    assert "Sign-In" in driver.page_source or "Sign in" in driver.page_source
+    
+    # Step 3: Check for the presence of 'Remember Me' checkbox
+    remember_me_elements = driver.find_elements(By.XPATH, "//input[@type='checkbox' and contains(@name, 'remember')]") or \
+                          driver.find_elements(By.XPATH, "//*[contains(text(), 'Remember Me')]")
+    
+    # Expected: 'Remember Me' checkbox is not present
+    assert len(remember_me_elements) == 0, "'Remember Me' checkbox should not be present"
+
+
+def tc_login_003_forgot_username():
+    """Test Case TC_LOGIN_003: Verify 'Forgot Username' workflow"""
+    # Step 2: Navigate to the login screen
+    driver.get(BASE_URL)
+    driver.find_element(By.ID, "nav-link-accountList").click()
+    pause()
+    assert "Sign-In" in driver.page_source or "Sign in" in driver.page_source
+    
+    # Step 3: Click on 'Forgot Username' link
+    forgot_username_link = driver.find_element(By.LINK_TEXT, "Forgot your username?") or \
+                          driver.find_element(By.PARTIAL_LINK_TEXT, "Forgot")
+    forgot_username_link.click()
+    pause()
+    
+    # Expected: 'Forgot Username' workflow is initiated
+    assert "Forgot" in driver.page_source or "recover" in driver.page_source.lower()
+    
+    # Step 4: Follow the instructions to recover username
+    email_field = driver.find_element(By.ID, "ap_email")
+    email_field.send_keys("user@example.com")
+    driver.find_element(By.ID, "continue").click()
+    pause()
+    
+    # Expected: Username recovery instructions are followed
+    assert "instructions" in driver.page_source.lower() or "sent" in driver.page_source.lower()
+
+
 # ---------- Test Runner ----------
 if __name__ == "__main__":
     try:
@@ -157,8 +222,13 @@ if __name__ == "__main__":
         tc_18_footer_links_visible()
         tc_19_language_change()
         tc_20_signout_option_visible()
+        
+        # Execute new login test cases
+        tc_login_001_invalid_credentials()
+        tc_login_002_remember_me_checkbox()
+        tc_login_003_forgot_username()
 
-        print("✅ All 20 UI test cases executed")
+        print("✅ All test cases executed including 3 new login tests")
 
     finally:
         driver.quit()
